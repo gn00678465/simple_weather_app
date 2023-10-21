@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "dev", // you can add nickname for it
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "--flavor",
+        "dev",
+      ]
+    },
+    {
+      "name": "prod", // you can add nickname for it
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "--flavor",
+        "prod",
+      ]
+    }
+  ],
+  "compounds": []
+}
