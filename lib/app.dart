@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator_platform_interface/src/models/position.dart';
+import 'package:simple_weather_app/providers/location_provider.dart';
 
 void runWithAppConfig() {
-  runApp(const App());
+  runApp(const ProviderScope(child: App()));
 }
 
-class App extends StatelessWidget {
+class App extends ConsumerWidget {
   const App({super.key});
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, ref) {
+    final currentPosition = ref.watch(positionProvider);
+
+    debugPrint('position: $currentPosition');
+
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(

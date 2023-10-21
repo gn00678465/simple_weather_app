@@ -9,6 +9,8 @@
       "args": [
         "--flavor",
         "dev",
+        "-t",
+        "lib/main_dev.dart"
       ]
     },
     {
@@ -19,6 +21,8 @@
       "args": [
         "--flavor",
         "prod",
+        "-t",
+        "lib/main_prod.dart"
       ]
     }
   ],
