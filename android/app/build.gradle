@@ -58,6 +58,20 @@ android {
             signingConfig signingConfigs.debug
         }
     }
+
+    flavorDimensions "default"
+    productFlavors {
+        prod {
+            dimension "default"
+            resValue "string", "app_name", "Simple Weather App"
+        }
+        dev {
+            dimension "default"
+            applicationIdSuffix ".dev"
+            resValue "string", "app_name", "Simple Weather App Dev"
+            versionNameSuffix ".dev"
+        }
+    }
 }
 
 flutter {
