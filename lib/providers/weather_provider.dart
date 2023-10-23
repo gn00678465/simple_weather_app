@@ -16,7 +16,11 @@ class WeatherNotifier extends StateNotifier<List<WeatherModel>> {
 
     final info = await WeatherModel.fetchWeather(apiKey: apiKey!, position: p!);
     if (info != null) {
-      state = List.from(state)..[0] = info;
+      if (state.isEmpty) {
+        state = [info, ...state];
+      } else {
+        state = List.from(state)..[0] = info;
+      }
     }
   }
 }
