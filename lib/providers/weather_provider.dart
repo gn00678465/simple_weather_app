@@ -1,29 +1,37 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
+
 import 'package:simple_weather_app/model/weather_model.dart';
 import './location_provider.dart';
 import './env_provider.dart';
 
-final weatherProvider = StreamProvider.autoDispose<WeatherModel?>((ref) {
-  final streamController = StreamController<WeatherModel?>();
+class WeatherNotifier extends StateNotifier<List<WeatherModel>> {
+  WeatherNotifier() : super([]);
 
-  final currentPosition = ref.watch(positionProvider);
-  final String apiKey =
-      ref.watch(envProvider.select((value) => value['OPEN_WEATHER_API']!));
+  void updateCurrentWeather({
+    required Future<Position?> position,
+    required String? apiKey,
+  }) async {
+    final p = await position;
 
-  currentPosition.when(
-    data: (data) async {
-      if (data != null) {
-        final info =
-            await WeatherModel.fetchWeather(position: data, apiKey: apiKey);
-        streamController.add(info);
-      }
-    },
-    error: (error, stackTrace) {
-      streamController.addError(error);
-    },
-    loading: () {},
-  );
+    final info = await WeatherModel.fetchWeather(apiKey: apiKey!, position: p!);
+    if (info != null) {
+      state = List.from(state)..[0] = info;
+    }
+  }
+}
 
-  return streamController.stream;
+final weatherProvider =
+    StateNotifierProvider.autoDispose<WeatherNotifier, List<WeatherModel>>(
+        (ref) {
+  final weatherNotifier = WeatherNotifier();
+
+  final apiKey =
+      ref.watch(envProvider.select((value) => value['OPEN_WEATHER_API']));
+
+  ref.listen(positionProvider.future, (prev, next) {
+    weatherNotifier.updateCurrentWeather(position: next, apiKey: apiKey);
+  });
+
+  return weatherNotifier;
 });

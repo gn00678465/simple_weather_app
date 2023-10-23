@@ -24,12 +24,12 @@ void runWithAppConfig() async {
   ));
 }
 
-class App extends StatelessWidget {
+class App extends ConsumerWidget {
   const App({super.key});
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -61,7 +61,7 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(context, ref) {
-    final weather = ref.watch(weatherProvider);
+    // final weather = ref.watch(weatherProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Weather Demo'),
@@ -69,25 +69,25 @@ class HomePage extends ConsumerWidget {
       body: Center(
         child: Column(
           children: [
-            weather.when(
-              data: (data) {
-                return Column(
-                  children: [
-                    Text(
-                      'Your current city is: ${data?.city}',
-                    ),
-                    Text(
-                      'Your current temp is: ${data?.temp}',
-                    )
-                  ],
-                );
-              },
-              error: (error, stackTrace) {
-                debugPrint("$error");
-                return Container();
-              },
-              loading: () => Container(),
-            )
+            // weather.when(
+            //   data: (data) {
+            //     return Column(
+            //       children: [
+            //         Text(
+            //           'Your current city is: ${data?.city}',
+            //         ),
+            //         Text(
+            //           'Your current temp is: ${data?.temp}',
+            //         )
+            //       ],
+            //     );
+            //   },
+            //   error: (error, stackTrace) {
+            //     debugPrint("$error");
+            //     return Container();
+            //   },
+            //   loading: () => Container(),
+            // )
           ],
         ),
       ),
