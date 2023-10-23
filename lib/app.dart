@@ -1,12 +1,11 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:geolocator_platform_interface/src/models/position.dart';
 import 'package:simple_weather_app/providers/env_provider.dart';
-import 'package:simple_weather_app/providers/location_provider.dart';
-import 'package:simple_weather_app/providers/weather_provider.dart';
 import 'package:simple_weather_app/views/screens/weather_list.dart';
+// import 'package:geolocator_platform_interface/src/models/position.dart';
+// import 'package:simple_weather_app/providers/location_provider.dart';
+// import 'package:simple_weather_app/providers/weather_provider.dart';
 
 void runWithAppConfig() async {
   const String openWeatherApi = String.fromEnvironment('OPEN_WEATHER_API');
@@ -56,7 +55,7 @@ class Router {
 
   static Route? generateRoute(context) {
     return CupertinoPageRoute(
-      builder: (context) => WeatherList(),
+      builder: (context) => const WeatherList(),
     );
   }
 }

@@ -2,17 +2,26 @@ import 'dart:core';
 import 'package:flutter/cupertino.dart';
 
 import 'package:simple_weather_app/model/weather_model.dart';
+import 'package:simple_weather_app/constants/text_shadow.dart';
+
+const Shadow _shadow = Shadow(
+  color: CupertinoColors.systemGrey,
+  blurRadius: 12.0,
+  offset: Offset(0.0, 0.0),
+);
 
 class WeatherCard extends StatelessWidget {
   final WeatherModel weatherInfo;
   final int index;
   final bool isMinimized;
+  final bool isCurrent;
   final Duration duration = const Duration(milliseconds: 300);
 
   const WeatherCard({
     super.key,
     required this.index,
     required this.weatherInfo,
+    this.isCurrent = false,
     this.isMinimized = false,
   });
 
@@ -33,15 +42,47 @@ class WeatherCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
+          // 顯示地區
+          Positioned(
+            left: 0,
+            top: 0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isCurrent ? '我的位置' : weatherInfo.city,
+                  style: TextStyle(
+                    color: CupertinoColors.systemGrey5,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    shadows: outlinedText,
+                  ),
+                ),
+                Visibility(
+                  child: Text(
+                    weatherInfo.city,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: CupertinoColors.white,
+                      shadows: [
+                        _shadow,
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           // 顯示溫度
           Positioned(
             right: 0,
             top: 0,
             child: Text(
               '${weatherInfo.temp}\u00B0',
-              style: const TextStyle(
+              style: TextStyle(
                 color: CupertinoColors.lightBackgroundGray,
                 fontSize: 36,
+                shadows: outlinedText,
               ),
             ),
           ),

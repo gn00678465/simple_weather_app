@@ -1,36 +1,58 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
+import 'package:simple_weather_app/constants/text_shadow.dart';
 import 'package:simple_weather_app/model/weather_model.dart';
 import 'package:simple_weather_app/providers/weather_provider.dart';
 
 class WeatherDetail extends ConsumerStatefulWidget {
   final int index;
   final int itemCount;
+  final bool isCurrent;
 
   const WeatherDetail({
     super.key,
     required this.index,
     required this.itemCount,
+    this.isCurrent = false,
   });
 
   @override
   ConsumerState<WeatherDetail> createState() => _WeatherDetail();
 }
 
-class _WeatherDetail extends ConsumerState<WeatherDetail> {
+class _WeatherDetail extends ConsumerState<WeatherDetail>
+    with TickerProviderStateMixin {
   late PageController _controller;
+  late AnimationController _opacityController;
+  Timer? _timer;
 
   @override
   void initState() {
+    _opacityController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
     super.initState();
+
+    _runAnimation();
   }
 
   @override
   void dispose() {
+    _opacityController.dispose();
+    _controller.dispose();
+    _timer?.cancel();
     super.dispose();
+  }
+
+  void _runAnimation() {
+    _timer = Timer(const Duration(milliseconds: 300), () {
+      _opacityController.forward();
+    });
   }
 
   @override
@@ -48,8 +70,12 @@ class _WeatherDetail extends ConsumerState<WeatherDetail> {
               controller: _controller,
               imagePath: WeatherModel.weatherImage(weatherInfo),
               itemCount: widget.itemCount,
-              child: SafeArea(
-                child: Center(child: Text('Data')),
+              child: FadeTransition(
+                opacity: _opacityController,
+                child: PageViewContent(
+                  weatherInfo: weatherInfo,
+                  isCurrent: widget.isCurrent,
+                ),
               ),
             ),
           ),
@@ -58,6 +84,83 @@ class _WeatherDetail extends ConsumerState<WeatherDetail> {
             itemCount: widget.itemCount,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class PageViewContent extends StatelessWidget {
+  const PageViewContent({
+    super.key,
+    required this.weatherInfo,
+    this.isCurrent = false,
+  });
+
+  final WeatherModel weatherInfo;
+  final bool isCurrent;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.only(top: 36),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              isCurrent ? '我的位置' : weatherInfo.city,
+              style: TextStyle(
+                color: CupertinoColors.lightBackgroundGray,
+                fontSize: 24,
+                fontWeight: FontWeight.w500,
+                shadows: outlinedText,
+              ),
+            ),
+            Visibility(
+              visible: isCurrent,
+              child: Text(
+                weatherInfo.city,
+                style: const TextStyle(
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            Text(
+              '${weatherInfo.temp}\u00B0',
+              style: TextStyle(
+                color: CupertinoColors.white,
+                fontSize: 72,
+                fontWeight: FontWeight.w300,
+                shadows: outlinedText,
+              ),
+            ),
+            RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(text: '最高 ${weatherInfo.temp_max}\u00B0'),
+                  const WidgetSpan(child: SizedBox(width: 6)),
+                  TextSpan(text: '最低 ${weatherInfo.temp_min}\u00B0'),
+                ],
+                style: TextStyle(
+                  color: CupertinoColors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  shadows: outlinedText,
+                ),
+              ),
+            ),
+            Text(
+              weatherInfo.weatherDesc,
+              style: TextStyle(
+                color: CupertinoColors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                shadows: outlinedText,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -136,12 +239,7 @@ class WeatherPageView extends StatelessWidget {
                     fit: BoxFit.cover,
                   ),
                 ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 40),
-                    child: child,
-                  ),
-                ),
+                child: child,
               ),
             );
           },
@@ -167,8 +265,8 @@ class WeatherSmoothIndicator extends StatelessWidget {
       count: count,
       onDotClicked: (int value) {},
       effect: const WormEffect(
-        dotHeight: 12,
-        dotWidth: 12,
+        dotHeight: 8,
+        dotWidth: 8,
         type: WormType.thinUnderground,
         activeDotColor: CupertinoColors.systemGrey6,
         dotColor: CupertinoColors.systemGrey,

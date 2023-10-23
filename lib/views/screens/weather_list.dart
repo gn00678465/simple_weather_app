@@ -93,6 +93,7 @@ class _WeatherList extends ConsumerState<WeatherList> {
                         child: GestureDetector(
                           child: WeatherCard(
                             index: index,
+                            isCurrent: true,
                             isMinimized: isEditable,
                             weatherInfo: weathers[index],
                           ),
@@ -102,6 +103,7 @@ class _WeatherList extends ConsumerState<WeatherList> {
                               context: context,
                               index: index,
                               count: weathers.length,
+                              isCurrent: true,
                             );
                           },
                         ),
@@ -163,6 +165,7 @@ class _WeatherList extends ConsumerState<WeatherList> {
     required BuildContext context,
     required int index,
     required int count,
+    bool isCurrent = false,
   }) {
     Navigator.of(context).push(
       CupertinoPageRoute(
@@ -172,6 +175,7 @@ class _WeatherList extends ConsumerState<WeatherList> {
           return WeatherDetail(
             index: index,
             itemCount: count,
+            isCurrent: isCurrent,
           );
         },
         settings: RouteSettings(name: 'weather-card', arguments: index),
