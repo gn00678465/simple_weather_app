@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -7,6 +8,7 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:simple_weather_app/constants/text_shadow.dart';
 import 'package:simple_weather_app/model/weather_model.dart';
 import 'package:simple_weather_app/providers/weather_provider.dart';
+import 'package:simple_weather_app/views/widgets/fade_in_out.dart';
 
 class WeatherDetail extends ConsumerStatefulWidget {
   final int index;
@@ -90,7 +92,7 @@ class _WeatherDetail extends ConsumerState<WeatherDetail>
 }
 
 class PageViewContent extends StatelessWidget {
-  const PageViewContent({
+  PageViewContent({
     super.key,
     required this.weatherInfo,
     this.isCurrent = false,
@@ -99,70 +101,158 @@ class PageViewContent extends StatelessWidget {
   final WeatherModel weatherInfo;
   final bool isCurrent;
 
+  final double minExtent = 36 + 21 + 74 + 18 + 24;
+  final double maxExtent = 236;
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.only(top: 36),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              isCurrent ? '我的位置' : weatherInfo.city,
-              style: TextStyle(
-                color: CupertinoColors.lightBackgroundGray,
-                fontSize: 24,
-                fontWeight: FontWeight.w500,
-                shadows: outlinedText,
-              ),
+      child: CustomScrollView(
+        slivers: <Widget>[
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: SliverHeaderDelegate.builder(
+              minHeight: minExtent,
+              maxHeight: maxExtent,
+              builder: (context, shrinkOffset, overlapsContent) {
+                return Center(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      Text(
+                        isCurrent ? '我的位置' : weatherInfo.city,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: CupertinoColors.lightBackgroundGray,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w500,
+                          shadows: outlinedText,
+                          leadingDistribution: TextLeadingDistribution.even,
+                          height: 1.5,
+                        ),
+                      ),
+                      Visibility(
+                        visible: isCurrent,
+                        child: Text(
+                          weatherInfo.city,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            leadingDistribution: TextLeadingDistribution.even,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${weatherInfo.temp}\u00B0',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: CupertinoColors.white,
+                          fontSize: 72,
+                          fontWeight: FontWeight.w300,
+                          shadows: outlinedText,
+                          leadingDistribution: TextLeadingDistribution.even,
+                          height: 1,
+                        ),
+                      ),
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(text: '最高 ${weatherInfo.temp_max}\u00B0'),
+                            const WidgetSpan(child: SizedBox(width: 6)),
+                            TextSpan(text: '最低 ${weatherInfo.temp_min}\u00B0'),
+                          ],
+                          style: TextStyle(
+                            color: CupertinoColors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            shadows: outlinedText,
+                            leadingDistribution: TextLeadingDistribution.even,
+                            height: 1,
+                          ),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      FadeInOut(
+                        child: Text(
+                          weatherInfo.weatherDesc,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: CupertinoColors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            shadows: outlinedText,
+                            leadingDistribution: TextLeadingDistribution.even,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-            Visibility(
-              visible: isCurrent,
-              child: Text(
-                weatherInfo.city,
-                style: const TextStyle(
-                  fontSize: 14,
-                ),
-              ),
-            ),
-            Text(
-              '${weatherInfo.temp}\u00B0',
-              style: TextStyle(
-                color: CupertinoColors.white,
-                fontSize: 72,
-                fontWeight: FontWeight.w300,
-                shadows: outlinedText,
-              ),
-            ),
-            RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(text: '最高 ${weatherInfo.temp_max}\u00B0'),
-                  const WidgetSpan(child: SizedBox(width: 6)),
-                  TextSpan(text: '最低 ${weatherInfo.temp_min}\u00B0'),
-                ],
-                style: TextStyle(
-                  color: CupertinoColors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  shadows: outlinedText,
-                ),
-              ),
-            ),
-            Text(
-              weatherInfo.weatherDesc,
-              style: TextStyle(
-                color: CupertinoColors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                shadows: outlinedText,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+  }
+}
+
+typedef SliverHeaderBuilder = Widget Function(
+    BuildContext context, double shrinkOffset, bool overlapsContent);
+
+class SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
+  SliverHeaderDelegate({
+    required this.maxHeight,
+    this.minHeight = 0,
+    required Widget child,
+  })  : builder = ((a, b, c) => child),
+        assert(minHeight <= maxHeight && minHeight >= 0);
+
+  SliverHeaderDelegate.fixedHeight({
+    required double height,
+    required Widget child,
+  })  : builder = ((a, b, c) => child),
+        maxHeight = height,
+        minHeight = height;
+
+  SliverHeaderDelegate.builder(
+      {required this.maxHeight, this.minHeight = 0, required this.builder});
+
+  final double maxHeight;
+  final double minHeight;
+  final SliverHeaderBuilder builder;
+
+  @override
+  double get maxExtent => maxHeight;
+
+  @override
+  double get minExtent => minHeight;
+
+  @override
+  bool shouldRebuild(SliverHeaderDelegate oldDelegate) {
+    return oldDelegate.maxExtent != maxExtent ||
+        oldDelegate.minExtent != minExtent;
+  }
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    Widget child = builder(context, shrinkOffset, overlapsContent);
+
+    assert(() {
+      if (child.key != null) {
+        debugPrint(
+            '${child.key}: shrink: $shrinkOffset，overlaps:$overlapsContent');
+      }
+      return true;
+    }());
+
+    return SizedBox.expand(child: child);
   }
 }
 

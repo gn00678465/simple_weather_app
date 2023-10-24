@@ -43,6 +43,7 @@ dependencies:
   json_annotation: ^4.8.1
   pull_down_button: ^0.9.3
   smooth_page_indicator: ^1.1.0
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:
