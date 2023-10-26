@@ -16,17 +16,20 @@ class WeatherCard extends StatelessWidget {
   final bool isMinimized;
   final bool isCurrent;
   final Duration duration = const Duration(milliseconds: 300);
+  final String heroTag;
+  final void Function()? onTap;
 
   const WeatherCard({
     super.key,
     required this.index,
     required this.weatherInfo,
+    required this.heroTag,
     this.isCurrent = false,
     this.isMinimized = false,
+    this.onTap,
   });
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _card() {
     return AnimatedContainer(
       duration: duration,
       height: isMinimized ? 56 : 88,
@@ -127,6 +130,17 @@ class WeatherCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Hero(
+      tag: heroTag,
+      child: GestureDetector(
+        onTap: onTap,
+        child: _card(),
       ),
     );
   }

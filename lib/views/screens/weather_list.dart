@@ -88,68 +88,39 @@ class _WeatherList extends ConsumerState<WeatherList> {
                   itemCount: weathers.length,
                   itemBuilder: (context, index) {
                     if (index == 0) {
-                      return Hero(
-                        tag: 'weather-cart-$index',
-                        child: GestureDetector(
-                          child: WeatherCard(
+                      return WeatherCard(
+                        heroTag: 'weather-cart-$index',
+                        index: index,
+                        isCurrent: true,
+                        isMinimized: isEditable,
+                        weatherInfo: weathers[index],
+                        onTap: () {
+                          if (isEditable) return;
+                          _gotoDetailsPage(
+                            context: context,
                             index: index,
+                            count: weathers.length,
                             isCurrent: true,
-                            isMinimized: isEditable,
-                            weatherInfo: weathers[index],
-                          ),
-                          onTap: () {
-                            if (isEditable) return;
-                            _gotoDetailsPage(
-                              context: context,
-                              index: index,
-                              count: weathers.length,
-                              isCurrent: true,
-                            );
-                          },
-                        ),
+                          );
+                        },
                       );
                     }
-                    return Row(
-                      children: [
-                        _animatedAction(
-                          const Icon(
-                            CupertinoIcons.minus_circle,
-                            color: CupertinoColors.systemRed,
-                          ),
-                          isEditable,
-                          width: 40,
-                          duration: const Duration(milliseconds: 300),
-                        ),
-                        Flexible(
-                          child: Hero(
-                            tag: 'weather-cart-$index',
-                            child: GestureDetector(
-                              child: WeatherCard(
-                                index: index,
-                                isMinimized: isEditable,
-                                weatherInfo: weathers[index],
-                              ),
-                              onTap: () {
-                                if (isEditable) return;
-                                _gotoDetailsPage(
-                                  context: context,
-                                  index: index,
-                                  count: weathers.length,
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                        _animatedAction(
-                          const Icon(
-                            CupertinoIcons.line_horizontal_3,
-                            color: CupertinoColors.inactiveGray,
-                          ),
-                          isEditable,
-                          width: 40,
-                          duration: const Duration(milliseconds: 300),
-                        ),
-                      ],
+                    return _editableWeatherCard(
+                      child: WeatherCard(
+                        heroTag: 'weather-cart-$index',
+                        index: index,
+                        isMinimized: isEditable,
+                        weatherInfo: weathers[index],
+                        onTap: () {
+                          if (isEditable) return;
+                          _gotoDetailsPage(
+                            context: context,
+                            index: index,
+                            count: weathers.length,
+                          );
+                        },
+                      ),
+                      isExpanded: isEditable,
                     );
                   },
                 ),
@@ -184,6 +155,41 @@ class _WeatherList extends ConsumerState<WeatherList> {
   }
 }
 
+Widget _editableWeatherCard({
+  required Widget child,
+  required bool isExpanded,
+}) {
+  const Duration duration = Duration(milliseconds: 300);
+  const double width = 40;
+
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      _animatedAction(
+        const Icon(
+          CupertinoIcons.minus_circle,
+          color: CupertinoColors.systemRed,
+        ),
+        isExpanded,
+        width: width,
+        duration: duration,
+      ),
+      Flexible(
+        child: child,
+      ),
+      _animatedAction(
+        const Icon(
+          CupertinoIcons.line_horizontal_3,
+          color: CupertinoColors.inactiveGray,
+        ),
+        isExpanded,
+        width: width,
+        duration: duration,
+      ),
+    ],
+  );
+}
+
 Widget _animatedAction(
   Widget child,
   bool isExpanded, {
@@ -191,17 +197,18 @@ Widget _animatedAction(
   required Duration duration,
 }) {
   return AnimatedContainer(
+    duration: duration,
+    width: isExpanded ? width : 0,
+    child: AnimatedOpacity(
       duration: duration,
-      width: isExpanded ? width : 0,
-      child: AnimatedOpacity(
-        duration: duration,
-        opacity: isExpanded ? 1 : 0,
-        child: Align(
-          alignment: Alignment.center,
-          child: SizedBox(
-            width: width,
-            child: child,
-          ),
+      opacity: isExpanded ? 1 : 0,
+      child: Align(
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: width,
+          child: child,
         ),
-      ));
+      ),
+    ),
+  );
 }
