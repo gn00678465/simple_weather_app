@@ -7,16 +7,19 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:simple_weather_app/constants/text_shadow.dart';
 import 'package:simple_weather_app/model/weather_model.dart';
 import 'package:simple_weather_app/views/widgets/fade_in_out.dart';
+import 'package:simple_weather_app/views/widgets/sliver_header_delegate.dart';
 
 class WeatherDetail extends StatefulWidget {
   final int index;
   final int itemCount;
   final bool isCurrent;
+  final String heroTag;
 
   const WeatherDetail({
     super.key,
     required this.index,
     required this.itemCount,
+    required this.heroTag,
     this.isCurrent = false,
   });
 
@@ -29,6 +32,10 @@ class _WeatherDetail extends State<WeatherDetail>
   late PageController _controller;
   late AnimationController _opacityController;
   Timer? _timer;
+
+  String get heroTag => widget.heroTag;
+  int get index => widget.index;
+  int get itemCount => widget.itemCount;
 
   @override
   void initState() {
@@ -57,7 +64,7 @@ class _WeatherDetail extends State<WeatherDetail>
 
   @override
   Widget build(BuildContext context) {
-    _controller = PageController(initialPage: widget.index, keepPage: true);
+    _controller = PageController(initialPage: index, keepPage: true);
 
     final WeatherModel weatherInfo =
         ModalRoute.of(context)?.settings.arguments as WeatherModel;
@@ -67,9 +74,10 @@ class _WeatherDetail extends State<WeatherDetail>
         children: [
           Expanded(
             child: WeatherPageView(
+              heroTag: heroTag,
               controller: _controller,
               imagePath: WeatherModel.weatherImage(weatherInfo),
-              itemCount: widget.itemCount,
+              itemCount: itemCount,
               child: FadeTransition(
                 opacity: _opacityController,
                 child: PageViewContent(
@@ -81,7 +89,7 @@ class _WeatherDetail extends State<WeatherDetail>
           ),
           BottomNavBar(
             controller: _controller,
-            itemCount: widget.itemCount,
+            itemCount: itemCount,
           ),
         ],
       ),
@@ -90,7 +98,7 @@ class _WeatherDetail extends State<WeatherDetail>
 }
 
 class PageViewContent extends StatelessWidget {
-  PageViewContent({
+  const PageViewContent({
     super.key,
     required this.weatherInfo,
     this.isCurrent = false,
@@ -197,63 +205,6 @@ class PageViewContent extends StatelessWidget {
   }
 }
 
-typedef SliverHeaderBuilder = Widget Function(
-    BuildContext context, double shrinkOffset, bool overlapsContent);
-
-class SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
-  SliverHeaderDelegate({
-    required this.maxHeight,
-    this.minHeight = 0,
-    required Widget child,
-  })  : builder = ((a, b, c) => child),
-        assert(minHeight <= maxHeight && minHeight >= 0);
-
-  SliverHeaderDelegate.fixedHeight({
-    required double height,
-    required Widget child,
-  })  : builder = ((a, b, c) => child),
-        maxHeight = height,
-        minHeight = height;
-
-  SliverHeaderDelegate.builder(
-      {required this.maxHeight, this.minHeight = 0, required this.builder});
-
-  final double maxHeight;
-  final double minHeight;
-  final SliverHeaderBuilder builder;
-
-  @override
-  double get maxExtent => maxHeight;
-
-  @override
-  double get minExtent => minHeight;
-
-  @override
-  bool shouldRebuild(SliverHeaderDelegate oldDelegate) {
-    return oldDelegate.maxExtent != maxExtent ||
-        oldDelegate.minExtent != minExtent;
-  }
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    Widget child = builder(context, shrinkOffset, overlapsContent);
-
-    assert(() {
-      if (child.key != null) {
-        debugPrint(
-            '${child.key}: shrink: $shrinkOffset，overlaps:$overlapsContent');
-      }
-      return true;
-    }());
-
-    return SizedBox.expand(child: child);
-  }
-}
-
 class BottomNavBar extends StatelessWidget {
   const BottomNavBar({
     super.key,
@@ -301,12 +252,14 @@ class WeatherPageView extends StatelessWidget {
     required this.imagePath,
     required this.itemCount,
     required this.child,
+    required this.heroTag,
   });
 
   final PageController controller;
   final String imagePath;
   final int itemCount;
   final Widget child;
+  final String heroTag;
 
   @override
   Widget build(BuildContext context) {
@@ -318,7 +271,7 @@ class WeatherPageView extends StatelessWidget {
           itemCount: itemCount,
           itemBuilder: (context, index) {
             return Hero(
-              tag: 'weather-cart-$index',
+              tag: heroTag,
               child: Container(
                 width: MediaQuery.of(context).size.width,
                 decoration: BoxDecoration(

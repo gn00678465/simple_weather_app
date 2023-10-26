@@ -7,6 +7,7 @@ import 'package:simple_weather_app/views/widgets/pull_down_actions.dart';
 import 'package:simple_weather_app/views/widgets/search_city_field.dart';
 import 'package:simple_weather_app/views/widgets/weather_card.dart';
 import 'package:simple_weather_app/views/screens/weather_detail.dart';
+import 'package:simple_weather_app/views/widgets/sliver_header_delegate.dart';
 
 class WeatherList extends ConsumerStatefulWidget {
   const WeatherList({super.key});
@@ -30,107 +31,125 @@ class _WeatherList extends ConsumerState<WeatherList> {
 
   @override
   Widget build(BuildContext context) {
-    final weathers = ref.watch(weatherProvider);
+    final currentWeather = ref.watch(currentWeatherProvider);
+    final weathers = ref.watch(weathersProvider);
 
     return CupertinoPageScaffold(
-      child: NestedScrollView(
-        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-          return <Widget>[
-            CupertinoSliverNavigationBar(
-              padding: const EdgeInsetsDirectional.symmetric(horizontal: 28),
-              largeTitle: const Padding(
-                padding: EdgeInsets.only(left: 12),
-                child: Text(
-                  '天氣',
-                  style: TextStyle(color: CupertinoColors.white),
-                ),
+      child: CustomScrollView(
+        slivers: [
+          CupertinoSliverNavigationBar(
+            padding: const EdgeInsetsDirectional.symmetric(horizontal: 28),
+            largeTitle: const Padding(
+              padding: EdgeInsets.only(left: 12),
+              child: Text(
+                '天氣',
+                style: TextStyle(color: CupertinoColors.white),
               ),
-              trailing: isEditable
-                  ? GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          isEditable = false;
-                        });
-                      },
-                      child: const Text(
-                        '完成',
-                        style: TextStyle(
-                          color: CupertinoColors.white,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    )
-                  : PullDownActions(
-                      onPressEdit: () {
-                        setState(() {
-                          isEditable = true;
-                        });
-                      },
-                      onPressUnit: () {},
-                    ),
             ),
-          ];
-        },
-        body: NotificationListener<ScrollNotification>(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 28),
-                child: SearchCityField(),
-              ),
-              Expanded(
-                child: ListView.separated(
-                  padding:
-                      const EdgeInsets.only(bottom: 16, left: 28, right: 28),
-                  separatorBuilder: (context, index) => const SizedBox(
-                    height: 8,
-                  ),
-                  itemCount: weathers.length,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return WeatherCard(
-                        heroTag: 'weather-cart-$index',
-                        index: index,
-                        isCurrent: true,
-                        isMinimized: isEditable,
-                        weatherInfo: weathers[index],
-                        onTap: () {
-                          if (isEditable) return;
-                          _gotoDetailsPage(
-                            context: context,
-                            index: index,
-                            count: weathers.length,
-                            weatherInfo: weathers[index],
-                            isCurrent: true,
-                          );
-                        },
-                      );
-                    }
-                    return _editableWeatherCard(
-                      child: WeatherCard(
-                        heroTag: 'weather-cart-$index',
-                        index: index,
-                        isMinimized: isEditable,
-                        weatherInfo: weathers[index],
-                        onTap: () {
-                          if (isEditable) return;
-                          _gotoDetailsPage(
-                            context: context,
-                            index: index,
-                            count: weathers.length,
-                            weatherInfo: weathers[index],
-                          );
-                        },
+            trailing: isEditable
+                ? GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isEditable = false;
+                      });
+                    },
+                    child: const Text(
+                      '完成',
+                      style: TextStyle(
+                        color: CupertinoColors.white,
+                        decoration: TextDecoration.underline,
                       ),
-                      isExpanded: isEditable,
-                    );
-                  },
-                ),
-              ),
-            ],
+                    ),
+                  )
+                : PullDownActions(
+                    onPressEdit: () {
+                      setState(() {
+                        isEditable = true;
+                      });
+                    },
+                    onPressUnit: () {},
+                  ),
           ),
-        ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 28),
+            sliver: SliverPersistentHeader(
+              pinned: true,
+              delegate: SliverHeaderDelegate.fixedHeight(
+                height: 40,
+                child: const SearchCityField(),
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 28),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate(
+                [
+                  Wrap(
+                    runSpacing: 8.0,
+                    children: [
+                      FutureBuilder(
+                        future: currentWeather,
+                        builder: ((context, snapshot) {
+                          if (snapshot.hasData) {
+                            const heroTag = 'weather-cart-0';
+                            return WeatherCard(
+                              heroTag: heroTag,
+                              index: 0,
+                              isCurrent: true,
+                              isMinimized: isEditable,
+                              weatherInfo: snapshot.data!,
+                              onTap: () {
+                                if (isEditable) return;
+                                _gotoDetailsPage(
+                                  heroTag: heroTag,
+                                  context: context,
+                                  index: 0,
+                                  count: 2,
+                                  weatherInfo: snapshot.data!,
+                                  isCurrent: true,
+                                );
+                              },
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        }),
+                      ),
+                      FutureBuilder(
+                        future: currentWeather,
+                        builder: ((context, snapshot) {
+                          if (snapshot.hasData) {
+                            const heroTag = 'weather-cart-1';
+                            return _editableWeatherCard(
+                              child: WeatherCard(
+                                heroTag: heroTag,
+                                index: 1,
+                                isMinimized: isEditable,
+                                weatherInfo: snapshot.data!,
+                                onTap: () {
+                                  if (isEditable) return;
+                                  _gotoDetailsPage(
+                                    heroTag: heroTag,
+                                    context: context,
+                                    index: 1,
+                                    count: 2,
+                                    weatherInfo: snapshot.data!,
+                                  );
+                                },
+                              ),
+                              isExpanded: isEditable,
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        }),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -140,6 +159,7 @@ class _WeatherList extends ConsumerState<WeatherList> {
     required int index,
     required int count,
     required WeatherModel weatherInfo,
+    required String heroTag,
     bool isCurrent = false,
   }) {
     Navigator.of(context).push(
@@ -148,6 +168,7 @@ class _WeatherList extends ConsumerState<WeatherList> {
         allowSnapshotting: false,
         builder: (BuildContext context) {
           return WeatherDetail(
+            heroTag: heroTag,
             index: index,
             itemCount: count,
             isCurrent: isCurrent,
