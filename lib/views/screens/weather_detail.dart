@@ -2,15 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import 'package:simple_weather_app/constants/text_shadow.dart';
 import 'package:simple_weather_app/model/weather_model.dart';
-import 'package:simple_weather_app/providers/weather_provider.dart';
 import 'package:simple_weather_app/views/widgets/fade_in_out.dart';
 
-class WeatherDetail extends ConsumerStatefulWidget {
+class WeatherDetail extends StatefulWidget {
   final int index;
   final int itemCount;
   final bool isCurrent;
@@ -23,10 +21,10 @@ class WeatherDetail extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<WeatherDetail> createState() => _WeatherDetail();
+  State<WeatherDetail> createState() => _WeatherDetail();
 }
 
-class _WeatherDetail extends ConsumerState<WeatherDetail>
+class _WeatherDetail extends State<WeatherDetail>
     with TickerProviderStateMixin {
   late PageController _controller;
   late AnimationController _opacityController;
@@ -61,8 +59,8 @@ class _WeatherDetail extends ConsumerState<WeatherDetail>
   Widget build(BuildContext context) {
     _controller = PageController(initialPage: widget.index, keepPage: true);
 
-    final weatherInfo =
-        ref.watch(weatherProvider.select((value) => value[widget.index]));
+    final WeatherModel weatherInfo =
+        ModalRoute.of(context)?.settings.arguments as WeatherModel;
 
     return CupertinoPageScaffold(
       child: Column(

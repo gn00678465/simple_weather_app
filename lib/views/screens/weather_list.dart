@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:simple_weather_app/model/weather_model.dart';
 
 import 'package:simple_weather_app/providers/weather_provider.dart';
 import 'package:simple_weather_app/views/widgets/pull_down_actions.dart';
@@ -100,6 +101,7 @@ class _WeatherList extends ConsumerState<WeatherList> {
                             context: context,
                             index: index,
                             count: weathers.length,
+                            weatherInfo: weathers[index],
                             isCurrent: true,
                           );
                         },
@@ -117,6 +119,7 @@ class _WeatherList extends ConsumerState<WeatherList> {
                             context: context,
                             index: index,
                             count: weathers.length,
+                            weatherInfo: weathers[index],
                           );
                         },
                       ),
@@ -136,6 +139,7 @@ class _WeatherList extends ConsumerState<WeatherList> {
     required BuildContext context,
     required int index,
     required int count,
+    required WeatherModel weatherInfo,
     bool isCurrent = false,
   }) {
     Navigator.of(context).push(
@@ -149,7 +153,7 @@ class _WeatherList extends ConsumerState<WeatherList> {
             isCurrent: isCurrent,
           );
         },
-        settings: RouteSettings(name: 'weather-card', arguments: index),
+        settings: RouteSettings(name: 'weather-card', arguments: weatherInfo),
       ),
     );
   }
