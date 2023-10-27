@@ -11,15 +11,14 @@ final positionProvider = StreamProvider.autoDispose<Position?>((ref) {
   return streamController.stream;
 });
 
-void _determinePosition(StreamController<Position?> streamController) async {
+Future<Position> initPosition() async {
   bool serviceEnabled;
   LocationPermission permission;
 
   serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
   if (!serviceEnabled) {
-    streamController.addError('Location services are disabled.');
-    return;
+    Future.error('Location services are disabled.');
   }
 
   permission = await Geolocator.checkPermission();
@@ -27,17 +26,21 @@ void _determinePosition(StreamController<Position?> streamController) async {
   if (permission == LocationPermission.denied) {
     permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.denied) {
-      streamController.addError('Location permissions are denied');
-      return;
+      Future.error('Location permissions are denied');
     }
   }
 
   if (permission == LocationPermission.deniedForever) {
-    streamController.addError(
+    Future.error(
         'Location permissions are permanently denied, we cannot request permissions.');
-    return;
   }
 
+  return await Geolocator.getCurrentPosition(
+    desiredAccuracy: LocationAccuracy.high,
+  );
+}
+
+void _determinePosition(StreamController<Position?> streamController) async {
   const LocationSettings locationSettings = LocationSettings(
     accuracy: LocationAccuracy.high,
     distanceFilter: 100,
@@ -48,9 +51,7 @@ void _determinePosition(StreamController<Position?> streamController) async {
     streamController.add(position);
   });
 
-  Position initialPosition = await Geolocator.getCurrentPosition(
-    desiredAccuracy: LocationAccuracy.high,
-  );
+  final initialPosition = await initPosition();
 
   streamController.add(initialPosition);
 }
