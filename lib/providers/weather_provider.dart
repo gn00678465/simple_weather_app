@@ -3,52 +3,39 @@ import 'package:geolocator/geolocator.dart';
 
 import 'package:simple_weather_app/model/weather_model.dart';
 import './location_provider.dart';
-import './env_provider.dart';
+import './providers.dart';
 
-class WeatherNotifier extends StateNotifier<List<WeatherModel>> {
-  WeatherNotifier() : super([]);
+final currentWeatherProvider = FutureProvider.autoDispose((ref) async {
+  Position? position;
 
-  void updateCurrentWeather({
-    required Future<Position?> position,
-    required String? apiKey,
-  }) async {
-    final p = await position;
+  final apiKey =
+      ref.watch(envProvider.select((value) => value['OPEN_WEATHER_API']));
 
-    final info = await WeatherModel.fetchWeather(apiKey: apiKey!, position: p!);
-    if (info != null) {
-      if (state.isEmpty) {
-        state = [info, ...state];
-      } else {
-        state = List.from(state)..[0] = info;
-      }
-    }
+  try {
+    position = await ref.watch(positionProvider.future);
+  } catch (e) {
+    position = null;
   }
-}
-
-final weathersProvider =
-    StateNotifierProvider.autoDispose<WeatherNotifier, List<WeatherModel>>(
-        (ref) {
-  final weatherNotifier = WeatherNotifier();
-
-  final apiKey =
-      ref.watch(envProvider.select((value) => value['OPEN_WEATHER_API']));
-
-  ref.listen(positionProvider.future, (prev, next) {
-    weatherNotifier.updateCurrentWeather(position: next, apiKey: apiKey);
-  });
-
-  return weatherNotifier;
-});
-
-final currentWeatherProvider =
-    StateProvider.autoDispose<Future<WeatherModel?>>((ref) async {
-  final position = await ref.watch(positionProvider.future);
-
-  final apiKey =
-      ref.watch(envProvider.select((value) => value['OPEN_WEATHER_API']));
 
   if (position != null && apiKey != null) {
     return await WeatherModel.fetchWeather(apiKey: apiKey, position: position);
   }
   return null;
+});
+
+class WeathersNotifier extends StateNotifier<List<WeatherModel>> {
+  WeathersNotifier() : super([]);
+
+  void readPositions() {}
+
+  void setPosition() {}
+
+  void removePosition() {}
+}
+
+final weathersProvider =
+    StateNotifierProvider<WeathersNotifier, List<WeatherModel>>((ref) {
+  final weatherNotifier = WeathersNotifier();
+
+  return weatherNotifier;
 });

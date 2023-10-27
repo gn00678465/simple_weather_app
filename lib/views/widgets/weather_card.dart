@@ -1,8 +1,10 @@
 import 'dart:core';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:simple_weather_app/model/weather_model.dart';
 import 'package:simple_weather_app/constants/text_shadow.dart';
+import 'package:simple_weather_app/providers/current_time_provider.dart';
 
 const Shadow _shadow = Shadow(
   color: CupertinoColors.systemGrey,
@@ -61,18 +63,26 @@ class WeatherCard extends StatelessWidget {
                     shadows: outlinedText,
                   ),
                 ),
-                Visibility(
-                  child: Text(
-                    weatherInfo.city,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: CupertinoColors.white,
-                      shadows: [
-                        _shadow,
-                      ],
-                    ),
-                  ),
-                ),
+                isCurrent
+                    ? Text(
+                        weatherInfo.city,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: CupertinoColors.white,
+                          shadows: [
+                            _shadow,
+                          ],
+                        ),
+                      )
+                    : const CurrentTime(
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: CupertinoColors.white,
+                          shadows: [
+                            _shadow,
+                          ],
+                        ),
+                      ),
               ],
             ),
           ),
@@ -147,7 +157,7 @@ class WeatherCard extends StatelessWidget {
 
   Widget _hideWhenMinimized(
       {required Widget child, required Duration duration}) {
-    final Animation<double> _parent = CurvedAnimation(
+    final Animation<double> parent = CurvedAnimation(
       parent: const AlwaysStoppedAnimation(1),
       curve: Curves.easeInOut,
     );
@@ -157,14 +167,37 @@ class WeatherCard extends StatelessWidget {
       child: !isMinimized
           ? FadeTransition(
               key: const ValueKey(1),
-              opacity: Tween<double>(begin: 0, end: 1).animate(_parent),
+              opacity: Tween<double>(begin: 0, end: 1).animate(parent),
               child: child,
             )
           : FadeTransition(
               key: const ValueKey(2),
-              opacity: Tween<double>(begin: 1, end: 0).animate(_parent),
+              opacity: Tween<double>(begin: 1, end: 0).animate(parent),
               child: child,
             ),
+    );
+  }
+}
+
+class CurrentTime extends ConsumerWidget {
+  final TextStyle? style;
+
+  const CurrentTime({super.key, this.style});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AsyncValue<String> currentTime = ref.watch(currentTimeProvider);
+
+    return currentTime.when(
+      skipLoadingOnReload: true,
+      data: (data) {
+        return Text(
+          data,
+          style: style,
+        );
+      },
+      error: (err, stack) => Text('Error: $err'),
+      loading: () => const SizedBox.shrink(),
     );
   }
 }

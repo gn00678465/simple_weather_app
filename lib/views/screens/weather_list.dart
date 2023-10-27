@@ -32,7 +32,6 @@ class _WeatherList extends ConsumerState<WeatherList> {
   @override
   Widget build(BuildContext context) {
     final currentWeather = ref.watch(currentWeatherProvider);
-    final weathers = ref.watch(weathersProvider);
 
     return CupertinoPageScaffold(
       child: CustomScrollView(
@@ -88,17 +87,17 @@ class _WeatherList extends ConsumerState<WeatherList> {
                   Wrap(
                     runSpacing: 8.0,
                     children: [
-                      FutureBuilder(
-                        future: currentWeather,
-                        builder: ((context, snapshot) {
-                          if (snapshot.hasData) {
+                      currentWeather.when(
+                        skipLoadingOnReload: true,
+                        data: (data) {
+                          if (data != null) {
                             const heroTag = 'weather-cart-0';
                             return WeatherCard(
                               heroTag: heroTag,
                               index: 0,
                               isCurrent: true,
                               isMinimized: isEditable,
-                              weatherInfo: snapshot.data!,
+                              weatherInfo: data,
                               onTap: () {
                                 if (isEditable) return;
                                 _gotoDetailsPage(
@@ -106,43 +105,47 @@ class _WeatherList extends ConsumerState<WeatherList> {
                                   context: context,
                                   index: 0,
                                   count: 2,
-                                  weatherInfo: snapshot.data!,
+                                  weatherInfo: data,
                                   isCurrent: true,
                                 );
                               },
                             );
                           }
                           return const SizedBox.shrink();
-                        }),
+                        },
+                        error: (err, stack) => Text('Error: $err'),
+                        loading: () => const SizedBox.shrink(),
                       ),
-                      FutureBuilder(
-                        future: currentWeather,
-                        builder: ((context, snapshot) {
-                          if (snapshot.hasData) {
-                            const heroTag = 'weather-cart-1';
-                            return _editableWeatherCard(
-                              child: WeatherCard(
-                                heroTag: heroTag,
-                                index: 1,
-                                isMinimized: isEditable,
-                                weatherInfo: snapshot.data!,
-                                onTap: () {
-                                  if (isEditable) return;
-                                  _gotoDetailsPage(
-                                    heroTag: heroTag,
-                                    context: context,
-                                    index: 1,
-                                    count: 2,
-                                    weatherInfo: snapshot.data!,
-                                  );
-                                },
-                              ),
-                              isExpanded: isEditable,
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        }),
-                      ),
+                      // currentWeather.when(
+                      //   skipLoadingOnReload: true,
+                      //   data: (data) {
+                      //     if (data != null) {
+                      //       const heroTag = 'weather-cart-1';
+                      //       return _editableWeatherCard(
+                      //         child: WeatherCard(
+                      //           heroTag: heroTag,
+                      //           index: 1,
+                      //           isMinimized: isEditable,
+                      //           weatherInfo: data,
+                      //           onTap: () {
+                      //             if (isEditable) return;
+                      //             _gotoDetailsPage(
+                      //               heroTag: heroTag,
+                      //               context: context,
+                      //               index: 1,
+                      //               count: 2,
+                      //               weatherInfo: data,
+                      //             );
+                      //           },
+                      //         ),
+                      //         isExpanded: isEditable,
+                      //       );
+                      //     }
+                      //     return const SizedBox.shrink();
+                      //   },
+                      //   error: (err, stack) => Text('Error: $err'),
+                      //   loading: () => const SizedBox.shrink(),
+                      // ),
                     ],
                   ),
                 ],

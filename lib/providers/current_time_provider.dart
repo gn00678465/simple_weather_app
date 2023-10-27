@@ -6,9 +6,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final currentTimeProvider = StreamProvider.autoDispose<String>((ref) {
   final streamController = StreamController<String>();
 
-  Stream.periodic(const Duration(seconds: 1), (_) {
+  ref.onDispose(() {
+    streamController.close();
+  });
+
+  final Stream<String> stream =
+      Stream.periodic(const Duration(seconds: 1), (_) {
     final DateTime now = DateTime.now();
-    streamController.add(_formatDateTime(now));
+    return _formatDateTime(now);
+  });
+
+  stream.listen((event) {
+    streamController.add(event);
   });
 
   streamController.add(_formatDateTime(DateTime.now()));
