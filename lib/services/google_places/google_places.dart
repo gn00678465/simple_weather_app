@@ -30,7 +30,7 @@ class GooglePlaces {
   late Dio _dio;
   final GooglePlacesOutput output;
 
-  Future<List<Map<String, dynamic>>?> autocomplete(
+  Future<List<dynamic>?> autocomplete(
     String input, {
     String? types,
     double? latitude,
@@ -48,11 +48,12 @@ class GooglePlaces {
 
     if (result != null && result['status'] == 'OK') {
       return result['predictions'];
+    } else {
+      return null;
     }
-    return null;
   }
 
-  Future<Map<String, dynamic>?> _sendRequest(
+  Future<T?> _sendRequest<T>(
     String methods,
     String input, {
     String? types,
@@ -75,7 +76,7 @@ class GooglePlaces {
       queryParameters['types'] = types;
     }
 
-    Response<Map<String, dynamic>> response = await _dio.get(
+    Response<T> response = await _dio.get(
       '/maps/api/place/$methods/${output.name}',
       queryParameters: queryParameters,
       options: Options(

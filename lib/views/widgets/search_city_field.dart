@@ -31,13 +31,8 @@ class _SearchCityField extends State<SearchCityField> {
     try {
       final result = await _google_places_sdk.autocomplete(query);
 
-      debugPrint('result: ${result.toString()}');
-
-      options = result?.map((item) {
-            debugPrint(item.toString());
-            return PlacesModel.fromJson(item);
-          }) ??
-          [];
+      options =
+          result?.map((item) => PlacesModel.fromJson(item)).toList() ?? [];
     } catch (e) {
       debugPrint('error: $e');
       rethrow;
@@ -59,42 +54,80 @@ class _SearchCityField extends State<SearchCityField> {
 
   @override
   Widget build(BuildContext context) {
-    return Autocomplete(
-      fieldViewBuilder: (
-        BuildContext context,
-        TextEditingController controller,
-        FocusNode focusNode,
-        VoidCallback onFieldSubmitted,
-      ) {
-        return CupertinoSearchTextField(
-          controller: controller,
-          placeholder: '搜尋城市或機場',
-          placeholderStyle: const TextStyle(
-            fontSize: 16,
-            color: CupertinoColors.inactiveGray,
-          ),
-          itemColor: CupertinoColors.inactiveGray,
-          itemSize: 16,
-          prefixInsets: const EdgeInsetsDirectional.fromSTEB(8, 0, 0, 0),
-          decoration: const BoxDecoration(
-            color: CupertinoColors.darkBackgroundGray,
-            borderRadius: BorderRadius.all(Radius.circular(8)),
-          ),
-          focusNode: focusNode,
-          onSubmitted: (String value) {
-            onFieldSubmitted();
-          },
-        );
-      },
-      optionsBuilder: (TextEditingValue textEditingValue) async {
-        final Iterable<PlacesModel>? options =
-            await _debouncedSearch(textEditingValue.text);
-        if (options == null) {
-          return _lastOptions;
-        }
-        _lastOptions = options;
-        return options;
-      },
+    return LayoutBuilder(
+      builder: (_, BoxConstraints constraints) => Autocomplete(
+        fieldViewBuilder: (
+          BuildContext context,
+          TextEditingController controller,
+          FocusNode focusNode,
+          VoidCallback onFieldSubmitted,
+        ) {
+          return CupertinoSearchTextField(
+            controller: controller,
+            placeholder: '搜尋城市或機場',
+            placeholderStyle: const TextStyle(
+              fontSize: 16,
+              color: CupertinoColors.inactiveGray,
+            ),
+            itemColor: CupertinoColors.inactiveGray,
+            itemSize: 16,
+            prefixInsets: const EdgeInsetsDirectional.fromSTEB(8, 0, 0, 0),
+            decoration: const BoxDecoration(
+              color: CupertinoColors.darkBackgroundGray,
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+            ),
+            focusNode: focusNode,
+            onSubmitted: (String value) {
+              onFieldSubmitted();
+            },
+          );
+        },
+        optionsBuilder: (TextEditingValue textEditingValue) async {
+          final Iterable<PlacesModel>? options =
+              await _debouncedSearch(textEditingValue.text);
+          if (options == null) {
+            return _lastOptions;
+          }
+          _lastOptions = options;
+          return options;
+        },
+        optionsViewBuilder: (
+          BuildContext context,
+          AutocompleteOnSelected<PlacesModel> onSelected,
+          Iterable<PlacesModel> options,
+        ) {
+          return Align(
+            alignment: Alignment.topLeft,
+            child: Material(
+              color: Colors.white,
+              elevation: 10,
+              child: SizedBox(
+                width: constraints.maxWidth,
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  itemCount: options.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final PlacesModel option = options.elementAt(index);
+                    return ListTile(
+                      title: Text(option.description),
+                      onTap: () {
+                        onSelected(option);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+          );
+        },
+        onSelected: (PlacesModel selection) {
+          debugPrint('You just selected ${selection.description}');
+        },
+        displayStringForOption: (PlacesModel option) {
+          return option.description;
+        },
+      ),
     );
   }
 }
