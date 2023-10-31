@@ -2,16 +2,23 @@ part of open_weather_library;
 
 /// https://github.com/cph-cachet/flutter-plugins/blob/master/packages/weather/lib/src/weather_domain.dart
 
+enum OpenWeatherUnits { metric, imperial }
+
 class OpenWeather {
   final String _apiKey;
   late Language language;
   late Dio _dio;
+  late OpenWeatherUnits unit;
 
   static const String fiveDayForecast = 'forecast';
   static const String currentWeather = 'weather';
   static const int statusOk = 200;
 
-  OpenWeather(this._apiKey, {this.language = Language.CHINESE_TRADITIONAL}) {
+  OpenWeather(
+    this._apiKey, {
+    this.language = Language.CHINESE_TRADITIONAL,
+    this.unit = OpenWeatherUnits.metric,
+  }) {
     _dio = Dio();
   }
 
@@ -47,13 +54,14 @@ class OpenWeather {
     final Map<String, dynamic> queryParameters = {
       'appid': _apiKey,
       'lang': _languageCode[language],
+      'units': unit.name,
     };
 
     if (cityName != null) {
       queryParameters['cityName'] = cityName;
     } else {
-      queryParameters['lat'] = lat;
-      queryParameters['lon'] = lon;
+      queryParameters['lat'] = lat.toString();
+      queryParameters['lon'] = lon.toString();
     }
 
     return Uri(
