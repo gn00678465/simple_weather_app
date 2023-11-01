@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-
-import 'package:simple_weather_app/utils/debounce.dart';
-import 'package:simple_weather_app/services/google_places/google_places.dart';
-// import 'package:simple_weather_app/services/open_weather/open_weather.dart';
+import 'package:simple_weather_app/model/weather_model.dart';
 import 'package:simple_weather_app/model/places_model.dart';
 import 'package:simple_weather_app/views/screens/weather_popup_surface.dart';
+import 'package:simple_weather_app/utils/debounce.dart';
+import 'package:simple_weather_app/services/google_places/google_places.dart';
 
 const String _googlePlacesKey = String.fromEnvironment('GOOGLE_API');
 
@@ -68,6 +67,17 @@ class _SearchCityField extends State<SearchCityField> {
     _isFocused = false;
     _debouncedSearch = debounce<Iterable<PlacesModel>?, String>(_search);
     super.initState();
+  }
+
+  Future<WeatherModel?> _showPopup(
+      {required double lat, required double lng}) async {
+    return await showCupertinoModalPopup<WeatherModel?>(
+      context: context,
+      builder: (BuildContext context) => WeatherPopupSurface(
+        lat: lat,
+        lng: lng,
+      ),
+    );
   }
 
   @override
@@ -156,8 +166,11 @@ class _SearchCityField extends State<SearchCityField> {
                       await _googlePlacesSdk.placeDetail(selection.place_id);
                   if (result != null) {
                     final location = result['geometry']['location'];
-                    if (context.mounted) {
-                      showWeatherModalPopup(context, location);
+                    final res = await _showPopup(
+                      lat: location['lat'],
+                      lng: location['lng'],
+                    );
+                    if (res != null) {
                     }
                   }
                 },
