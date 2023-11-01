@@ -1,41 +1,55 @@
-import 'dart:convert';
-
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:simple_weather_app/services/open_weather/open_weather.dart';
 import 'package:simple_weather_app/model/weather_model.dart';
-import './location_provider.dart';
+import 'package:simple_weather_app/utils/list.dart';
 import './providers.dart';
 
 const String _openWeatherKey = String.fromEnvironment('OPEN_WEATHER_API');
 final _openWeatherSDK = OpenWeather(_openWeatherKey);
+
+const _positionKey = 'pos';
 
 class WeathersNotifier extends StateNotifier<List<WeatherModel?>> {
   WeathersNotifier({required this.sharedPrefs}) : super([]);
 
   final SharedPreferences sharedPrefs;
 
-  void readAllPositions() {}
+  List<Map<String, dynamic>> _getPositionList() {
+    final List<String>? stringList = sharedPrefs.getStringList(_positionKey);
+    if (stringList == null) return [];
+    return fromStringList(stringList);
+  }
 
-  void setNewPosition(Map<String, dynamic> position) {
-    final String pos = jsonEncode(position);
-    debugPrint('sharedPrefs: $sharedPrefs');
+  Future<void> _setPositionList(List<Map<String, dynamic>> list) async {
+    final List<String> stringList = toStringList(list);
+    await sharedPrefs.setStringList(_positionKey, stringList);
+  }
+
+  Future<void> setNewPosition(Map<String, dynamic> position) async {
+    final originList = _getPositionList();
+    await _setPositionList([...originList, position]);
   }
 
   void setNewWeather(WeatherModel? weather) {
     state = [...state, weather];
   }
 
-  void setNewPositionAndWeather(
-      Map<String, dynamic> position, WeatherModel weather) {
-    setNewPosition(position);
+  Future<void> setNewPositionAndWeather(
+      Map<String, dynamic> position, WeatherModel weather) async {
     setNewWeather(weather);
+    await setNewPosition(position);
   }
 
-  void removePosition() {}
+  Future<void> removePosition(int index) async {
+    if (index == 0) return;
+    removeWeather(index);
+    final originList = _getPositionList();
+    final newList = List.from(originList).removeAt(index - 1);
+    await _setPositionList(newList);
+  }
 
   void updateWeather(WeatherModel? weather, int index) {
     if (index >= state.length) {
@@ -45,34 +59,41 @@ class WeathersNotifier extends StateNotifier<List<WeatherModel?>> {
     }
   }
 
-  void removeWeather() {}
+  void removeWeather(int index) {
+    state = List.from(state).removeAt(index);
+  }
 
-  void initState() async {}
+  Future<void> initState(Future<Position?> currentPosition) async {
+    List<WeatherModel?> weathers = [];
+
+    Position? current = await currentPosition;
+
+    final WeatherModel? currentWeather = current != null
+        ? await _openWeatherSDK.currentWeatherByLocation(
+            current.latitude, current.longitude)
+        : null;
+    if (currentWeather != null) {
+      currentWeather.currentPosition = true;
+    }
+    weathers.add(currentWeather);
+
+    final list = _getPositionList();
+    for (final position in list) {
+      final weather = await _openWeatherSDK.currentWeatherByLocation(
+          position['lat'], position['lng']);
+      weathers.add(weather);
+    }
+
+    state = weathers;
+  }
 }
 
 final weathersProvider =
     StateNotifierProvider.autoDispose<WeathersNotifier, List<WeatherModel?>>(
         (ref) {
-  final _sharedPrefs = ref.watch(sharedPreferencesProvider);
+  final sharedPrefs = ref.watch(sharedPreferencesProvider);
 
-  final weatherNotifier = WeathersNotifier(sharedPrefs: _sharedPrefs);
-
-  ref.listen(
-    positionProvider.future,
-    (previous, next) async {
-      final Position? position = await next;
-      final WeatherModel? weather = position != null
-          ? await _openWeatherSDK.currentWeatherByLocation(
-              position.latitude, position.longitude)
-          : null;
-
-      if (weather != null) {
-        weather.currentPosition = true;
-      }
-
-      weatherNotifier.updateWeather(weather, 0);
-    },
-  );
+  final weatherNotifier = WeathersNotifier(sharedPrefs: sharedPrefs);
 
   return weatherNotifier;
 });

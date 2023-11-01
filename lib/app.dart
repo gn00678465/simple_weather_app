@@ -5,8 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import 'package:simple_weather_app/providers/providers.dart';
 import 'package:simple_weather_app/views/screens/weather_list.dart';
-// import 'package:geolocator_platform_interface/src/models/position.dart';
-// import 'package:simple_weather_app/providers/location_provider.dart';
+import 'package:simple_weather_app/providers/location_provider.dart';
 import 'package:simple_weather_app/providers/weather_provider.dart';
 
 void runWithAppConfig() async {
@@ -44,7 +43,9 @@ class _EagerInitialization extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(weathersProvider);
+    ref
+        .read(weathersProvider.notifier)
+        .initState(ref.watch(positionProvider.future));
     return child;
   }
 }
