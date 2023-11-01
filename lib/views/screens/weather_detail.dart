@@ -87,7 +87,7 @@ class _WeatherDetail extends ConsumerState<WeatherDetail>
                 width: MediaQuery.of(context).size.width,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage(WeatherModel.weatherImage(weatherInfo)),
+                    image: WeatherModel.weatherImage(weatherInfo),
                     fit: BoxFit.cover,
                   ),
                 ),

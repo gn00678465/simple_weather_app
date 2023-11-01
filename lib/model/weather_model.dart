@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'weather_model.g.dart';
@@ -25,6 +26,7 @@ class WeatherModel {
   final CoordModel coord; // 經緯度資訊
 
   late bool currentPosition;
+  late DateTime createdAt;
 
   WeatherModel({
     required this.city,
@@ -46,6 +48,7 @@ class WeatherModel {
     required this.coord,
   }) {
     currentPosition = false;
+    createdAt = DateTime.now();
   }
 
   factory WeatherModel.fromJson(Map<String, dynamic> json) {
@@ -72,18 +75,18 @@ class WeatherModel {
 
   Map<String, dynamic> toJson() => _$WeatherModelToJson(this);
 
-  static String weatherImage(WeatherModel weather) {
+  static AssetImage weatherImage(WeatherModel weather) {
     final now = DateTime.now().toUtc();
     int t = (now.millisecondsSinceEpoch / 1000).ceil();
 
     if (t > weather.sunrise && t < weather.sunset) {
       if (weather.weather == 'Clouds') {
-        return 'assets/images/cloudy.png';
+        return const AssetImage('assets/images/cloudy.png');
       } else {
-        return 'assets/images/sunny.png';
+        return const AssetImage('assets/images/sunny.png');
       }
     } else {
-      return 'assets/images/night.png';
+      return const AssetImage('assets/images/night.png');
     }
   }
 }

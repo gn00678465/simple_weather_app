@@ -101,8 +101,7 @@ class WeatherPopupSurface extends StatelessWidget {
                       top: Radius.circular(8), bottom: Radius.zero),
                   color: CupertinoColors.systemCyan,
                   image: DecorationImage(
-                    image:
-                        AssetImage(WeatherModel.weatherImage(snapshot.data!)),
+                    image: WeatherModel.weatherImage(snapshot.data!),
                     fit: BoxFit.cover,
                   ),
                 ),

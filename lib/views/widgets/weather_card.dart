@@ -38,7 +38,7 @@ class WeatherCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         image: DecorationImage(
-          image: AssetImage(WeatherModel.weatherImage(weatherInfo)),
+          image: WeatherModel.weatherImage(weatherInfo),
           fit: BoxFit.cover,
           alignment: Alignment.center,
         ),
