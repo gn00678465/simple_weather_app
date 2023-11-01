@@ -1,6 +1,4 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:simple_weather_app/services/weather_service.dart';
-import 'package:geolocator/geolocator.dart';
 
 part 'weather_model.g.dart';
 
@@ -26,6 +24,8 @@ class WeatherModel {
   final int clouds; // 雲量 %
   final CoordModel coord; // 經緯度資訊
 
+  late bool currentPosition;
+
   WeatherModel({
     required this.city,
     required this.temp,
@@ -44,7 +44,9 @@ class WeatherModel {
     required this.country,
     required this.clouds,
     required this.coord,
-  });
+  }) {
+    currentPosition = false;
+  }
 
   factory WeatherModel.fromJson(Map<String, dynamic> json) {
     return WeatherModel(
@@ -84,13 +86,6 @@ class WeatherModel {
       return 'assets/images/night.png';
     }
   }
-
-  static Future<WeatherModel?> Function({
-    required String apiKey,
-    EnumWeatherLang? lang,
-    required Position position,
-    EnumWeatherUnits? units,
-  }) fetchWeather = fetchWeatherByPosition;
 }
 
 @JsonSerializable()

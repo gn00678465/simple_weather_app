@@ -95,7 +95,6 @@ class WeatherPopupSurface extends StatelessWidget {
                 context,
                 child: PageViewContent(
                   weatherInfo: snapshot.data!,
-                  isCurrent: false,
                 ),
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.vertical(

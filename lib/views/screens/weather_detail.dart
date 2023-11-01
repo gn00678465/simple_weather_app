@@ -2,16 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:simple_weather_app/providers/weather_provider.dart';
 import 'package:simple_weather_app/constants/text_shadow.dart';
 import 'package:simple_weather_app/model/weather_model.dart';
 import 'package:simple_weather_app/views/widgets/fade_in_out.dart';
 import 'package:simple_weather_app/views/widgets/sliver_header_delegate.dart';
 
-class WeatherDetail extends StatefulWidget {
+class WeatherDetail extends ConsumerStatefulWidget {
   final int index;
   final int itemCount;
-  final bool isCurrent;
   final String heroTag;
 
   const WeatherDetail({
@@ -19,20 +20,21 @@ class WeatherDetail extends StatefulWidget {
     required this.index,
     required this.itemCount,
     required this.heroTag,
-    this.isCurrent = false,
   });
 
   @override
-  State<WeatherDetail> createState() => _WeatherDetail();
+  ConsumerState<WeatherDetail> createState() => _WeatherDetail();
 }
 
-class _WeatherDetail extends State<WeatherDetail>
+class _WeatherDetail extends ConsumerState<WeatherDetail>
     with TickerProviderStateMixin {
+  late int currentPage;
   late PageController _controller;
   late AnimationController _opacityController;
+  late String heroTag;
+
   Timer? _timer;
 
-  String get heroTag => widget.heroTag;
   int get index => widget.index;
   int get itemCount => widget.itemCount;
 
@@ -42,9 +44,11 @@ class _WeatherDetail extends State<WeatherDetail>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    super.initState();
-
     _runAnimation();
+    _controller = PageController(initialPage: index, keepPage: true);
+    heroTag = widget.heroTag;
+    currentPage = index;
+    super.initState();
   }
 
   @override
@@ -55,6 +59,13 @@ class _WeatherDetail extends State<WeatherDetail>
     super.dispose();
   }
 
+  void _onPageChanged(int page) {
+    heroTag = 'weather-cart-$page';
+    setState(() {
+      currentPage = page;
+    });
+  }
+
   void _runAnimation() {
     _timer = Timer(const Duration(milliseconds: 300), () {
       _opacityController.forward();
@@ -63,25 +74,34 @@ class _WeatherDetail extends State<WeatherDetail>
 
   @override
   Widget build(BuildContext context) {
-    _controller = PageController(initialPage: index, keepPage: true);
-
     final WeatherModel weatherInfo =
-        ModalRoute.of(context)?.settings.arguments as WeatherModel;
+        ref.watch(weathersProvider.select((value) => value[currentPage]!));
 
     return CupertinoPageScaffold(
       child: Column(
         children: [
           Expanded(
-            child: WeatherPageView(
-              heroTag: heroTag,
-              controller: _controller,
-              imagePath: WeatherModel.weatherImage(weatherInfo),
-              itemCount: itemCount,
-              child: FadeTransition(
-                opacity: _opacityController,
-                child: PageViewContent(
-                  weatherInfo: weatherInfo,
-                  isCurrent: widget.isCurrent,
+            child: Hero(
+              tag: heroTag,
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(WeatherModel.weatherImage(weatherInfo)),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: WeatherPageView(
+                  controller: _controller,
+                  itemCount: itemCount,
+                  onPageChanged: _onPageChanged,
+                  child: FadeTransition(
+                    opacity: _opacityController,
+                    child: PageViewContent(
+                      key: ValueKey(currentPage),
+                      weatherInfo: weatherInfo,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -100,11 +120,9 @@ class PageViewContent extends StatelessWidget {
   const PageViewContent({
     super.key,
     required this.weatherInfo,
-    this.isCurrent = false,
   });
 
   final WeatherModel weatherInfo;
-  final bool isCurrent;
 
   final double minExtent = 36 + 21 + 74 + 18 + 24;
   final double maxExtent = 236;
@@ -125,7 +143,7 @@ class PageViewContent extends StatelessWidget {
                     shrinkWrap: true,
                     children: [
                       Text(
-                        isCurrent ? '我的位置' : weatherInfo.city,
+                        weatherInfo.currentPosition ? '我的位置' : weatherInfo.city,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: CupertinoColors.lightBackgroundGray,
@@ -137,7 +155,7 @@ class PageViewContent extends StatelessWidget {
                         ),
                       ),
                       Visibility(
-                        visible: isCurrent,
+                        visible: weatherInfo.currentPosition,
                         child: Text(
                           weatherInfo.city,
                           textAlign: TextAlign.center,
@@ -248,40 +266,28 @@ class WeatherPageView extends StatelessWidget {
   const WeatherPageView({
     super.key,
     required this.controller,
-    required this.imagePath,
     required this.itemCount,
     required this.child,
-    required this.heroTag,
+    this.onPageChanged,
   });
 
   final PageController controller;
-  final String imagePath;
   final int itemCount;
   final Widget child;
-  final String heroTag;
+  final void Function(int)? onPageChanged;
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         PageView.builder(
+          padEnds: false,
+          allowImplicitScrolling: true,
           controller: controller,
-          onPageChanged: (int value) {},
+          onPageChanged: onPageChanged,
           itemCount: itemCount,
           itemBuilder: (context, index) {
-            return Hero(
-              tag: heroTag,
-              child: Container(
-                width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(imagePath),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                child: child,
-              ),
-            );
+            return child;
           },
         ),
       ],

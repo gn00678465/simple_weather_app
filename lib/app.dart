@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,13 +7,12 @@ import 'package:simple_weather_app/providers/providers.dart';
 import 'package:simple_weather_app/views/screens/weather_list.dart';
 // import 'package:geolocator_platform_interface/src/models/position.dart';
 // import 'package:simple_weather_app/providers/location_provider.dart';
-// import 'package:simple_weather_app/providers/weather_provider.dart';
+import 'package:simple_weather_app/providers/weather_provider.dart';
 
 void runWithAppConfig() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   const String openWeatherApi = String.fromEnvironment('OPEN_WEATHER_API');
-
   final sharedPreferences = await SharedPreferences.getInstance();
 
   if (openWeatherApi.isEmpty) {
@@ -35,19 +32,29 @@ void runWithAppConfig() async {
     ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(sharedPreferences),
-        envProvider.overrideWithValue({'OPEN_WEATHER_API': openWeatherApi}),
       ],
-      child: const App(),
+      child: const _EagerInitialization(child: App()),
     ),
   );
 }
 
-class App extends ConsumerWidget {
+class _EagerInitialization extends ConsumerWidget {
+  const _EagerInitialization({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(weathersProvider);
+    return child;
+  }
+}
+
+class App extends StatelessWidget {
   const App({super.key});
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return CupertinoApp(
       title: 'Simple Weather App',
       theme: const CupertinoThemeData(

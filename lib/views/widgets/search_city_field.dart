@@ -1,25 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:simple_weather_app/model/weather_model.dart';
 import 'package:simple_weather_app/model/places_model.dart';
 import 'package:simple_weather_app/views/screens/weather_popup_surface.dart';
 import 'package:simple_weather_app/utils/debounce.dart';
 import 'package:simple_weather_app/services/google_places/google_places.dart';
+import 'package:simple_weather_app/providers/weather_provider.dart';
 
 const String _googlePlacesKey = String.fromEnvironment('GOOGLE_API');
 
 final _googlePlacesSdk = GooglePlaces(_googlePlacesKey);
 
-class SearchCityField extends StatefulWidget {
+class SearchCityField extends ConsumerStatefulWidget {
   const SearchCityField({super.key, this.onFocusChanged});
 
   final void Function(bool)? onFocusChanged;
 
   @override
-  State<SearchCityField> createState() => _SearchCityField();
+  ConsumerState<SearchCityField> createState() => _SearchCityField();
 }
 
-class _SearchCityField extends State<SearchCityField> {
+class _SearchCityField extends ConsumerState<SearchCityField> {
   String? _currentQuery;
   late bool _isFocused;
   final Duration _duration = const Duration(milliseconds: 200);
@@ -166,11 +169,14 @@ class _SearchCityField extends State<SearchCityField> {
                       await _googlePlacesSdk.placeDetail(selection.place_id);
                   if (result != null) {
                     final location = result['geometry']['location'];
-                    final res = await _showPopup(
+                    final weather = await _showPopup(
                       lat: location['lat'],
                       lng: location['lng'],
                     );
-                    if (res != null) {
+                    if (weather != null) {
+                      ref
+                          .read(weathersProvider.notifier)
+                          .setNewPositionAndWeather(location, weather);
                     }
                   }
                 },

@@ -16,7 +16,6 @@ class WeatherCard extends StatelessWidget {
   final WeatherModel weatherInfo;
   final int index;
   final bool isMinimized;
-  final bool isCurrent;
   final Duration duration = const Duration(milliseconds: 300);
   final String heroTag;
   final void Function()? onTap;
@@ -26,7 +25,6 @@ class WeatherCard extends StatelessWidget {
     required this.index,
     required this.weatherInfo,
     required this.heroTag,
-    this.isCurrent = false,
     this.isMinimized = false,
     this.onTap,
   });
@@ -55,7 +53,7 @@ class WeatherCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isCurrent ? '我的位置' : weatherInfo.city,
+                  weatherInfo.currentPosition ? '我的位置' : weatherInfo.city,
                   style: TextStyle(
                     color: CupertinoColors.systemGrey5,
                     fontSize: 20,
@@ -63,7 +61,7 @@ class WeatherCard extends StatelessWidget {
                     shadows: outlinedText,
                   ),
                 ),
-                isCurrent
+                weatherInfo.currentPosition
                     ? Text(
                         weatherInfo.city,
                         style: const TextStyle(
