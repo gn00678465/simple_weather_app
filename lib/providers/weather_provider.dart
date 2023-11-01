@@ -47,7 +47,8 @@ class WeathersNotifier extends StateNotifier<List<WeatherModel?>> {
     if (index == 0) return;
     removeWeather(index);
     final originList = _getPositionList();
-    final newList = List.from(originList).removeAt(index - 1);
+    final List<Map<String, dynamic>> newList = List.from(originList)
+      ..removeAt(index - 1);
     await _setPositionList(newList);
   }
 
@@ -60,7 +61,7 @@ class WeathersNotifier extends StateNotifier<List<WeatherModel?>> {
   }
 
   void removeWeather(int index) {
-    state = List.from(state).removeAt(index);
+    state = List.from(state)..removeAt(index);
   }
 
   Future<void> initState(Future<Position?> currentPosition) async {

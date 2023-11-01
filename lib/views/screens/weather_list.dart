@@ -127,6 +127,11 @@ class _WeatherList extends ConsumerState<WeatherList> {
                                   },
                                 ),
                                 isExpanded: isEditable,
+                                onDelete: () {
+                                  ref
+                                      .read(weathersProvider.notifier)
+                                      .removePosition(idx);
+                                },
                               );
                       }
                       return const SizedBox.shrink();
@@ -167,6 +172,7 @@ class _WeatherList extends ConsumerState<WeatherList> {
 Widget _editableWeatherCard({
   required Widget child,
   required bool isExpanded,
+  void Function()? onDelete,
 }) {
   const Duration duration = Duration(milliseconds: 300);
   const double width = 40;
@@ -174,14 +180,17 @@ Widget _editableWeatherCard({
   return Row(
     mainAxisAlignment: MainAxisAlignment.center,
     children: [
-      _animatedAction(
-        const Icon(
-          CupertinoIcons.minus_circle,
-          color: CupertinoColors.systemRed,
+      GestureDetector(
+        onTap: onDelete,
+        child: _animatedAction(
+          const Icon(
+            CupertinoIcons.minus_circle,
+            color: CupertinoColors.systemRed,
+          ),
+          isExpanded,
+          width: width,
+          duration: duration,
         ),
-        isExpanded,
-        width: width,
-        duration: duration,
       ),
       Flexible(
         child: child,
