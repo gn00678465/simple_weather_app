@@ -75,6 +75,46 @@ class WeatherModel {
 
   Map<String, dynamic> toJson() => _$WeatherModelToJson(this);
 
+  WeatherModel copyWith({
+    String? city,
+    int? temp,
+    int? feels_like,
+    int? temp_min,
+    int? temp_max,
+    int? pressure,
+    int? humidity,
+    int? visibility,
+    String? weather,
+    String? weatherDesc,
+    double? windSpeed,
+    int? windDeg,
+    int? sunrise,
+    int? sunset,
+    String? country,
+    int? clouds,
+    CoordModel? coord,
+  }) {
+    return WeatherModel(
+      city: city ?? this.city,
+      temp: temp ?? this.temp,
+      temp_min: temp_min ?? this.temp_min,
+      temp_max: temp_max ?? this.temp_max,
+      pressure: pressure ?? this.pressure,
+      humidity: humidity ?? this.humidity,
+      visibility: visibility ?? this.visibility,
+      weather: weather ?? this.weather,
+      weatherDesc: weatherDesc ?? this.weatherDesc,
+      feels_like: feels_like ?? this.feels_like,
+      windSpeed: windSpeed ?? this.windSpeed,
+      windDeg: windDeg ?? this.windDeg,
+      sunrise: sunrise ?? this.sunrise,
+      sunset: sunrise ?? this.sunset,
+      country: country ?? this.country,
+      clouds: clouds ?? this.clouds,
+      coord: coord ?? this.coord,
+    );
+  }
+
   static AssetImage weatherImage(WeatherModel weather) {
     final now = DateTime.now().toUtc();
     int t = (now.millisecondsSinceEpoch / 1000).ceil();

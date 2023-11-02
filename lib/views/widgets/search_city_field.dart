@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:simple_weather_app/model/weather_model.dart';
 import 'package:simple_weather_app/model/places_model.dart';
+import 'package:simple_weather_app/model/location_model.dart';
 import 'package:simple_weather_app/views/screens/weather_popup_surface.dart';
 import 'package:simple_weather_app/utils/debounce.dart';
 import 'package:simple_weather_app/services/google_places/google_places.dart';
@@ -29,8 +30,8 @@ class _SearchCityField extends ConsumerState<SearchCityField> {
   final double _width = 50;
 
   late Iterable<PlacesModel> _lastOptions = <PlacesModel>[];
-
   late final Debounceable<Iterable<PlacesModel>?, String> _debouncedSearch;
+  late TextEditingController _editingController;
 
   Future<Iterable<PlacesModel>?> _search(String query) async {
     _currentQuery = query;
@@ -73,12 +74,13 @@ class _SearchCityField extends ConsumerState<SearchCityField> {
   }
 
   Future<WeatherModel?> _showPopup(
-      {required double lat, required double lng}) async {
+      {required double lat, required double lng, required String name}) async {
     return await showCupertinoModalPopup<WeatherModel?>(
       context: context,
       builder: (BuildContext context) => WeatherPopupSurface(
         lat: lat,
         lng: lng,
+        name: name,
       ),
     );
   }
@@ -101,6 +103,7 @@ class _SearchCityField extends ConsumerState<SearchCityField> {
                   FocusNode focusNode,
                   VoidCallback onFieldSubmitted,
                 ) {
+                  _editingController = controller;
                   return CupertinoSearchTextField(
                     controller: controller,
                     placeholder: '搜尋城市或機場',
@@ -168,15 +171,17 @@ class _SearchCityField extends ConsumerState<SearchCityField> {
                   final result =
                       await _googlePlacesSdk.placeDetail(selection.place_id);
                   if (result != null) {
-                    final location = result['geometry']['location'];
+                    final location = LocationModel.fromJson(result);
                     final weather = await _showPopup(
-                      lat: location['lat'],
-                      lng: location['lng'],
+                      lat: location.lat,
+                      lng: location.lng,
+                      name: location.name,
                     );
                     if (weather != null) {
                       ref
                           .read(weathersProvider.notifier)
-                          .setNewPositionAndWeather(location, weather);
+                          .setNewPositionAndWeather(location, weather)
+                          .then((value) => _editingController.text = "");
                     }
                   }
                 },

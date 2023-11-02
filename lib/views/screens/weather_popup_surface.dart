@@ -7,9 +7,9 @@ import './weather_detail.dart';
 const String _openWeatherKey = String.fromEnvironment('OPEN_WEATHER_API');
 final _openWeatherSDK = OpenWeather(_openWeatherKey);
 
-Future<WeatherModel?> _fetchWeather(double lat, double lng) async {
+Future<WeatherModel?> _fetchWeather(double lat, double lng, String name) async {
   final weather = await _openWeatherSDK.currentWeatherByLocation(lat, lng);
-  return weather;
+  return weather!.copyWith(city: name);
 }
 
 Widget _content(
@@ -64,17 +64,23 @@ Widget _content(
 }
 
 class WeatherPopupSurface extends StatelessWidget {
-  const WeatherPopupSurface({super.key, required this.lat, required this.lng});
+  const WeatherPopupSurface({
+    super.key,
+    required this.lat,
+    required this.lng,
+    required this.name,
+  });
 
   final double lat;
   final double lng;
+  final String name;
 
   @override
   Widget build(BuildContext context) {
     return CupertinoPopupSurface(
       isSurfacePainted: false,
       child: FutureBuilder(
-        future: _fetchWeather(lat, lng),
+        future: _fetchWeather(lat, lng, name),
         builder: (context, snapshot) {
           return switch (snapshot.connectionState) {
             ConnectionState.none => const SizedBox.shrink(),

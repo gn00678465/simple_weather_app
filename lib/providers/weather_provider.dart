@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:simple_weather_app/services/open_weather/open_weather.dart';
+import 'package:simple_weather_app/model/location_model.dart';
 import 'package:simple_weather_app/model/weather_model.dart';
 import 'package:simple_weather_app/utils/list.dart';
 import './providers.dart';
@@ -17,18 +18,20 @@ class WeathersNotifier extends StateNotifier<List<WeatherModel?>> {
 
   final SharedPreferences sharedPrefs;
 
-  List<Map<String, dynamic>> _getPositionList() {
+  List<LocationModel> _getPositionList() {
     final List<String>? stringList = sharedPrefs.getStringList(_positionKey);
+
     if (stringList == null) return [];
-    return fromStringList(stringList);
+    return fromStringList<LocationModel>(stringList,
+        decode: LocationModel.fromJson);
   }
 
-  Future<void> _setPositionList(List<Map<String, dynamic>> list) async {
+  Future<void> _setPositionList(List<LocationModel> list) async {
     final List<String> stringList = toStringList(list);
     await sharedPrefs.setStringList(_positionKey, stringList);
   }
 
-  Future<void> setNewPosition(Map<String, dynamic> position) async {
+  Future<void> setNewPosition(LocationModel position) async {
     final originList = _getPositionList();
     await _setPositionList([...originList, position]);
   }
@@ -38,8 +41,8 @@ class WeathersNotifier extends StateNotifier<List<WeatherModel?>> {
   }
 
   Future<void> setNewPositionAndWeather(
-      Map<String, dynamic> position, WeatherModel weather) async {
-    setNewWeather(weather);
+      LocationModel position, WeatherModel weather) async {
+    setNewWeather(weather.copyWith(city: position.name));
     await setNewPosition(position);
   }
 
@@ -47,7 +50,7 @@ class WeathersNotifier extends StateNotifier<List<WeatherModel?>> {
     if (index == 0) return;
     removeWeather(index);
     final originList = _getPositionList();
-    final List<Map<String, dynamic>> newList = List.from(originList)
+    final List<LocationModel> newList = List.from(originList)
       ..removeAt(index - 1);
     await _setPositionList(newList);
   }
@@ -65,7 +68,7 @@ class WeathersNotifier extends StateNotifier<List<WeatherModel?>> {
   }
 
   Future<void> initialState(Future<Position?> position) async {
-    List<WeatherModel?> weathers = [];
+    final List<WeatherModel?> weathers = [];
     final Position? current = await position;
     final WeatherModel? currentWeather = current != null
         ? await _openWeatherSDK.currentWeatherByLocation(
@@ -79,8 +82,8 @@ class WeathersNotifier extends StateNotifier<List<WeatherModel?>> {
     final list = _getPositionList();
     for (final position in list) {
       final weather = await _openWeatherSDK.currentWeatherByLocation(
-          position['lat'], position['lng']);
-      weathers.add(weather);
+          position.lat, position.lng);
+      weathers.add(weather!.copyWith(city: position.name));
     }
 
     if (weathers.isNotEmpty) {

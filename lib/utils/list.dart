@@ -1,15 +1,20 @@
 import 'dart:convert';
 
-List<Map<String, dynamic>> fromStringList(List<String> stringList) {
+List<T> fromStringList<T>(List<String> stringList,
+    {required T Function(Map<String, dynamic> json) decode}) {
   return stringList
       .asMap()
-      .map((key, value) =>
-          MapEntry(key, jsonDecode(value) as Map<String, dynamic>))
+      .map(
+        (key, value) => MapEntry(
+          key,
+          decode(jsonDecode(value) as Map<String, dynamic>),
+        ),
+      )
       .values
       .toList();
 }
 
-List<String> toStringList(List<Map<String, dynamic>> list) {
+List<String> toStringList<T>(List<T> list) {
   return List.from(list)
       .asMap()
       .map((key, value) => MapEntry(key, jsonEncode(value)))

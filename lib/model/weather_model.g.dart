@@ -24,7 +24,9 @@ WeatherModel _$WeatherModelFromJson(Map<String, dynamic> json) => WeatherModel(
       country: json['country'] as String,
       clouds: json['clouds'] as int,
       coord: CoordModel.fromJson(json['coord'] as Map<String, dynamic>),
-    );
+    )
+      ..currentPosition = json['currentPosition'] as bool
+      ..createdAt = DateTime.parse(json['createdAt'] as String);
 
 Map<String, dynamic> _$WeatherModelToJson(WeatherModel instance) =>
     <String, dynamic>{
@@ -45,6 +47,8 @@ Map<String, dynamic> _$WeatherModelToJson(WeatherModel instance) =>
       'country': instance.country,
       'clouds': instance.clouds,
       'coord': instance.coord,
+      'currentPosition': instance.currentPosition,
+      'createdAt': instance.createdAt.toIso8601String(),
     };
 
 CoordModel _$CoordModelFromJson(Map<String, dynamic> json) => CoordModel(
