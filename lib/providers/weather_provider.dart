@@ -64,19 +64,17 @@ class WeathersNotifier extends StateNotifier<List<WeatherModel?>> {
     state = List.from(state)..removeAt(index);
   }
 
-  Future<void> initState(Future<Position?> currentPosition) async {
+  Future<void> initialState(Future<Position?> position) async {
     List<WeatherModel?> weathers = [];
-
-    Position? current = await currentPosition;
-
+    final Position? current = await position;
     final WeatherModel? currentWeather = current != null
         ? await _openWeatherSDK.currentWeatherByLocation(
             current.latitude, current.longitude)
         : null;
     if (currentWeather != null) {
       currentWeather.currentPosition = true;
+      weathers.add(currentWeather);
     }
-    weathers.add(currentWeather);
 
     final list = _getPositionList();
     for (final position in list) {
@@ -85,7 +83,9 @@ class WeathersNotifier extends StateNotifier<List<WeatherModel?>> {
       weathers.add(weather);
     }
 
-    state = weathers;
+    if (weathers.isNotEmpty) {
+      state = weathers;
+    }
   }
 }
 

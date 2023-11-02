@@ -214,9 +214,6 @@ class _DismissibleWidget extends State<DismissibleWidget> {
       dismissThresholds: const {
         DismissDirection.endToStart: 0.5,
       },
-      onResize: () {
-        debugPrint('onResize');
-      },
       onUpdate: (DismissUpdateDetails details) {
         // setState(() {
         //   progress = details.progress;

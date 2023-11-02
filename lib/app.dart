@@ -11,12 +11,14 @@ import 'package:simple_weather_app/providers/weather_provider.dart';
 void runWithAppConfig() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  const String openWeatherApi = String.fromEnvironment('OPEN_WEATHER_API');
-  final sharedPreferences = await SharedPreferences.getInstance();
-
-  if (openWeatherApi.isEmpty) {
+  if (const String.fromEnvironment('OPEN_WEATHER_API').isEmpty) {
     throw 'OpenWeatherAPI not set!';
   }
+  if (const String.fromEnvironment('GOOGLE_API').isEmpty) {
+    throw 'Google API not set!';
+  }
+
+  final sharedPreferences = await SharedPreferences.getInstance();
 
   if (await Permission.contacts.request().isGranted) {
     // Either the permission was already granted before or the user just granted it.
@@ -31,21 +33,33 @@ void runWithAppConfig() async {
     ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+        permissionsProvider.overrideWith((ref) => statuses),
       ],
-      child: const _EagerInitialization(child: App()),
+      child: _EagerInitialization(
+        statuses: statuses,
+        child: const App(),
+      ),
     ),
   );
 }
 
 class _EagerInitialization extends ConsumerWidget {
-  const _EagerInitialization({required this.child});
+  const _EagerInitialization({
+    required this.child,
+    required this.statuses,
+  });
   final Widget child;
+  final Map<Permission, PermissionStatus> statuses;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref
-        .read(weathersProvider.notifier)
-        .initState(ref.watch(positionProvider.future));
+    final position = switch (statuses[Permission.location]) {
+      PermissionStatus.granted => ref.watch(positionProvider.future),
+      _ => Future.value(null),
+    };
+
+    ref.read(weathersProvider.notifier).initialState(position);
+
     return child;
   }
 }
