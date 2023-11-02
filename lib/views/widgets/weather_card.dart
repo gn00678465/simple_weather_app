@@ -1,16 +1,22 @@
 import 'dart:core';
+
+import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:simple_weather_app/model/weather_model.dart';
 import 'package:simple_weather_app/constants/text_shadow.dart';
+import 'package:simple_weather_app/model/weather_model.dart';
 import 'package:simple_weather_app/providers/current_time_provider.dart';
 
-const Shadow _shadow = Shadow(
-  color: CupertinoColors.systemGrey,
-  blurRadius: 12.0,
-  offset: Offset(0.0, 0.0),
-);
+enum WeatherCardPosition {
+  top(8),
+  left(12),
+  right(12),
+  bottom(8);
+
+  const WeatherCardPosition(this.value);
+  final double value;
+}
 
 class WeatherCard extends StatelessWidget {
   final WeatherModel weatherInfo;
@@ -30,87 +36,101 @@ class WeatherCard extends StatelessWidget {
   });
 
   Widget _card() {
-    return AnimatedContainer(
-      duration: duration,
-      height: isMinimized ? 56 : 88,
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        image: DecorationImage(
-          image: WeatherModel.weatherImage(weatherInfo),
-          fit: BoxFit.cover,
-          alignment: Alignment.center,
-        ),
-      ),
-      child: Stack(
-        children: [
-          // 顯示地區
-          Positioned(
-            left: 0,
-            top: 0,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  weatherInfo.currentPosition ? '我的位置' : weatherInfo.city,
-                  style: TextStyle(
-                    color: CupertinoColors.systemGrey5,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    shadows: outlinedText,
-                  ),
-                ),
-                weatherInfo.currentPosition
-                    ? Text(
-                        weatherInfo.city,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: CupertinoColors.white,
-                          shadows: [
-                            _shadow,
-                          ],
-                        ),
-                      )
-                    : const CurrentTime(
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: CupertinoColors.white,
-                          shadows: [
-                            _shadow,
-                          ],
-                        ),
-                      ),
-              ],
-            ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: duration,
+        height: isMinimized ? 56 : 88,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: WeatherModel.weatherImage(weatherInfo),
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
           ),
-          // 顯示溫度
-          Positioned(
-            right: 0,
-            top: 0,
-            child: Text(
-              '${weatherInfo.temp}\u00B0',
-              style: TextStyle(
-                color: CupertinoColors.lightBackgroundGray,
-                fontSize: 36,
-                shadows: outlinedText,
+        ),
+        child: Stack(
+          children: [
+            // 顯示地區
+            Positioned(
+              left: WeatherCardPosition.left.value,
+              top: WeatherCardPosition.top.value,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    weatherInfo.currentPosition ? '我的位置' : weatherInfo.city,
+                    style: TextStyle(
+                      color: CupertinoColors.systemGrey5,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      shadows: outlinedText,
+                    ),
+                  ),
+                  weatherInfo.currentPosition
+                      ? Text(
+                          weatherInfo.city,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: CupertinoColors.white,
+                            shadows: outlinedText,
+                          ),
+                        )
+                      : CurrentTime(
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: CupertinoColors.white,
+                            shadows: outlinedText,
+                          ),
+                        ),
+                ],
               ),
             ),
-          ),
-          // 溫度 range
-          Positioned(
-            right: 0,
-            bottom: 0,
-            child: _hideWhenMinimized(
-              duration: duration,
-              // offstage: isMinimized,
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(text: '最高 ${weatherInfo.temp_max}\u00B0'),
-                    const WidgetSpan(child: SizedBox(width: 6)),
-                    TextSpan(text: '最低 ${weatherInfo.temp_min}\u00B0'),
-                  ],
+            // 顯示溫度
+            Positioned(
+              right: WeatherCardPosition.right.value,
+              top: WeatherCardPosition.top.value,
+              child: Text(
+                '${weatherInfo.temp}\u00B0',
+                style: TextStyle(
+                  color: CupertinoColors.lightBackgroundGray,
+                  fontSize: 36,
+                  shadows: outlinedText,
+                ),
+              ),
+            ),
+            // 溫度 range
+            Positioned(
+              right: WeatherCardPosition.right.value,
+              bottom: WeatherCardPosition.bottom.value,
+              child: _hideWhenMinimized(
+                duration: duration,
+                // offstage: isMinimized,
+                child: RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(text: '最高 ${weatherInfo.temp_max}\u00B0'),
+                      const WidgetSpan(child: SizedBox(width: 6)),
+                      TextSpan(text: '最低 ${weatherInfo.temp_min}\u00B0'),
+                    ],
+                    style: const TextStyle(
+                      color: CupertinoColors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // 狀態
+            Positioned(
+              left: WeatherCardPosition.left.value,
+              bottom: WeatherCardPosition.bottom.value,
+              child: _hideWhenMinimized(
+                duration: duration,
+                // offstage: isMinimized,
+                child: Text(
+                  weatherInfo.weatherDesc,
                   style: const TextStyle(
                     color: CupertinoColors.white,
                     fontSize: 14,
@@ -119,25 +139,8 @@ class WeatherCard extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-          // 狀態
-          Positioned(
-            left: 0,
-            bottom: 0,
-            child: _hideWhenMinimized(
-              duration: duration,
-              // offstage: isMinimized,
-              child: Text(
-                weatherInfo.weatherDesc,
-                style: const TextStyle(
-                  color: CupertinoColors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

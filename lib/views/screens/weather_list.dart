@@ -1,13 +1,15 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:simple_weather_app/model/weather_model.dart';
 import 'package:simple_weather_app/providers/weather_provider.dart';
+import 'package:simple_weather_app/views/screens/weather_detail.dart';
 import 'package:simple_weather_app/views/widgets/pull_down_actions.dart';
 import 'package:simple_weather_app/views/widgets/search_city_field.dart';
 import 'package:simple_weather_app/views/widgets/weather_card.dart';
-import 'package:simple_weather_app/views/screens/weather_detail.dart';
 import 'package:simple_weather_app/views/widgets/sliver_header_delegate.dart';
+import 'package:simple_weather_app/views/widgets/editable_item.dart';
 
 class WeatherList extends ConsumerStatefulWidget {
   const WeatherList({super.key});
@@ -27,6 +29,10 @@ class _WeatherList extends ConsumerState<WeatherList> {
   @override
   void dispose() {
     super.dispose();
+  }
+
+  void _deleteWeather(int index) {
+    ref.read(weathersProvider.notifier).removePosition(index);
   }
 
   @override
@@ -94,6 +100,7 @@ class _WeatherList extends ConsumerState<WeatherList> {
                       if (weather != null) {
                         return weather.currentPosition
                             ? WeatherCard(
+                                key: ValueKey(weather),
                                 heroTag: heroTag,
                                 index: idx,
                                 isMinimized: isEditable,
@@ -109,30 +116,33 @@ class _WeatherList extends ConsumerState<WeatherList> {
                                   );
                                 },
                               )
-                            : _editableWeatherCard(
-                                child: WeatherCard(
-                                  heroTag: heroTag,
-                                  index: idx,
-                                  isMinimized: isEditable,
-                                  weatherInfo: weather,
-                                  onTap: () {
-                                    if (isEditable) return;
-                                    _gotoDetailsPage(
-                                      heroTag: heroTag,
-                                      context: context,
-                                      index: idx,
-                                      count: count,
-                                      weatherInfo: weather,
-                                    );
-                                  },
-                                ),
-                                isExpanded: isEditable,
-                                onDelete: () {
-                                  ref
-                                      .read(weathersProvider.notifier)
-                                      .removePosition(idx);
+                            : DismissibleWidget(
+                                key: ValueKey(weather),
+                                onDismissed: (DismissDirection direction) {
+                                  _deleteWeather(idx);
                                 },
-                              );
+                                child: EditableItem(
+                                  onLeftTap: () {
+                                    _deleteWeather(idx);
+                                  },
+                                  isExpanded: isEditable,
+                                  child: WeatherCard(
+                                    heroTag: heroTag,
+                                    index: idx,
+                                    isMinimized: isEditable,
+                                    weatherInfo: weather,
+                                    onTap: () {
+                                      if (isEditable) return;
+                                      _gotoDetailsPage(
+                                        heroTag: heroTag,
+                                        context: context,
+                                        index: idx,
+                                        count: count,
+                                        weatherInfo: weather,
+                                      );
+                                    },
+                                  ),
+                                ));
                       }
                       return const SizedBox.shrink();
                     }).toList(),
@@ -169,64 +179,51 @@ class _WeatherList extends ConsumerState<WeatherList> {
   }
 }
 
-Widget _editableWeatherCard({
-  required Widget child,
-  required bool isExpanded,
-  void Function()? onDelete,
-}) {
-  const Duration duration = Duration(milliseconds: 300);
-  const double width = 40;
+class DismissibleWidget extends StatefulWidget {
+  const DismissibleWidget({
+    required Key key,
+    required this.child,
+    this.onDismissed,
+  }) : super(key: key);
 
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      GestureDetector(
-        onTap: onDelete,
-        child: _animatedAction(
-          const Icon(
-            CupertinoIcons.minus_circle,
-            color: CupertinoColors.systemRed,
-          ),
-          isExpanded,
-          width: width,
-          duration: duration,
-        ),
-      ),
-      Flexible(
-        child: child,
-      ),
-      _animatedAction(
-        const Icon(
-          CupertinoIcons.line_horizontal_3,
-          color: CupertinoColors.inactiveGray,
-        ),
-        isExpanded,
-        width: width,
-        duration: duration,
-      ),
-    ],
-  );
+  final Widget child;
+  final void Function(DismissDirection)? onDismissed;
+
+  @override
+  State<DismissibleWidget> createState() => _DismissibleWidget();
 }
 
-Widget _animatedAction(
-  Widget child,
-  bool isExpanded, {
-  required double width,
-  required Duration duration,
-}) {
-  return AnimatedContainer(
-    duration: duration,
-    width: isExpanded ? width : 0,
-    child: AnimatedOpacity(
-      duration: duration,
-      opacity: isExpanded ? 1 : 0,
-      child: Align(
-        alignment: Alignment.center,
-        child: SizedBox(
-          width: width,
-          child: child,
+class _DismissibleWidget extends State<DismissibleWidget> {
+  double progress = 0.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dismissible(
+      key: widget.key!,
+      background: const ColoredBox(
+        color: CupertinoColors.systemRed,
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Icon(Icons.delete, color: CupertinoColors.white),
+          ),
         ),
       ),
-    ),
-  );
+      direction: DismissDirection.endToStart,
+      dismissThresholds: const {
+        DismissDirection.endToStart: 0.5,
+      },
+      onResize: () {
+        debugPrint('onResize');
+      },
+      onUpdate: (DismissUpdateDetails details) {
+        // setState(() {
+        //   progress = details.progress;
+        // });
+      },
+      onDismissed: widget.onDismissed,
+      child: widget.child,
+    );
+  }
 }
