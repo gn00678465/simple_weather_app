@@ -5,20 +5,28 @@
       "name": "dev", // you can add nickname for it
       "request": "launch",
       "type": "dart",
-      "program": "lib/main.dart",
+      "program": "lib/main_dev.dart",
       "args": [
         "--flavor",
         "dev",
+        "-t",
+        "lib/main_dev.dart",
+        "--dart-define-from-file",
+        ".env.development.json"
       ]
     },
     {
       "name": "prod", // you can add nickname for it
       "request": "launch",
       "type": "dart",
-      "program": "lib/main.dart",
+      "program": "lib/main_prod.dart",
       "args": [
         "--flavor",
         "prod",
+        "-t",
+        "lib/main_prod.dart",
+        "--dart-define-from-file",
+        ".env.production.json",
       ]
     }
   ],
